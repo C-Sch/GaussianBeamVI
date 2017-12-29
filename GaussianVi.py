@@ -35,54 +35,62 @@ def reset(event):
     sf1.reset()
     sw0.reset()
 
+# NEW # Lenspositions
+lensPositions = [51.0, 151.0]
+
 # initial beam and lens position
 lamda0 = 782e-6
 pos1ini = 51
 f1ini = 50.0
 wini = 0.5
-m1ini = mag(wini,lamda0,f1ini,pos1ini)
+m1ini = mag(wini,lamda0,f1ini,lensPositions[0])
 
 # 2nd lens initial parameter 
 f2ini = 50.0 
 pos2ini = 151.0
 
 # Compute Initial magnification and beamwaist position
-im1posini = imageposition(wini,lamda0,f1ini,pos1ini)
-im2posini = imageposition(wini*m1ini,lamda0,f2ini,pos2ini-im1posini-pos1ini)
+im1posini = imageposition(wini,lamda0,f1ini,lensPositions[0])
+im2posini = imageposition(wini*m1ini,lamda0,f2ini,lensPositions[1]-im1posini-lensPositions[0])
 w1ini = m1ini*wini
-m2ini = mag(w1ini,lamda0,f2ini,pos2ini-im1posini-pos1ini)
+m2ini = mag(w1ini,lamda0,f2ini,lensPositions[1]-im1posini-lensPositions[0])
 w2ini = m2ini*w1ini
 
 # Initialize Plots with initial parameters
-beam1down ,= plt.plot(np.arange(0,pos1ini,res),-beam(wini,lamda0,0.0,pos1ini),color = "Blue")
-beam1up ,= plt.plot(np.arange(0,pos1ini,res),beam(wini,lamda0,0.0,pos1ini),color = "Blue")
+# Initial beam before the first lens
+beam1down ,= plt.plot(np.arange(0,lensPositions[0],res),-beam(wini,lamda0,0.0,lensPositions[0]),color = "Blue")
+beam1up ,= plt.plot(np.arange(0,lensPositions[0],res),beam(wini,lamda0,0.0,lensPositions[0]),color = "Blue")
 
-beam2down ,= plt.plot(np.arange(pos1ini+im1posini,pos2ini,res),
-                      -beam(w1ini,lamda0,pos1ini+im1posini,pos2ini),color = "Blue")
-beam2up ,= plt.plot(np.arange(pos1ini+im1posini,pos2ini,res),
-                    beam(w1ini,lamda0,pos1ini+im1posini,pos2ini),color = "Blue")
+# Beam behind the first lens until it reaches the focus/image position (the beam's waist)
+bbeam1down ,= plt.plot(np.arange(lensPositions[0],lensPositions[0]+im1posini,res),
+                       -backbeam(m1ini,wini,lamda0,lensPositions[0],lensPositions[0]+im1posini),color = "Blue")
+bbeam1up ,= plt.plot(np.arange(lensPositions[0],lensPositions[0]+im1posini,res),
+                     backbeam(m1ini,wini,lamda0,lensPositions[0],lensPositions[0]+im1posini),color = "Blue")
 
-bbeam1down ,= plt.plot(np.arange(pos1ini,pos1ini+im1posini,res),
-                       -backbeam(m1ini,wini,lamda0,pos1ini,pos1ini+im1posini),color = "Blue")
-bbeam1up ,= plt.plot(np.arange(pos1ini,pos1ini+im1posini,res),
-                     backbeam(m1ini,wini,lamda0,pos1ini,pos1ini+im1posini),color = "Blue")
+# Beam before the second lense until it reaches the focus/image position
+beam2down ,= plt.plot(np.arange(lensPositions[0]+im1posini,lensPositions[1],res),
+                      -beam(w1ini,lamda0,lensPositions[0]+im1posini,lensPositions[1]),color = "Blue")
+beam2up ,= plt.plot(np.arange(lensPositions[0]+im1posini,lensPositions[1],res),
+                    beam(w1ini,lamda0,lensPositions[0]+im1posini,lensPositions[1]),color = "Blue")
+                    
+# Beam behind the second lense
+bbeam2down ,= plt.plot(np.arange(lensPositions[1],lensPositions[1]+im2posini,res),
+                       -backbeam(m2ini,w1ini,lamda0,lensPositions[1],lensPositions[1]+im2posini),color = "Blue")
 
-beam3down ,= plt.plot(np.arange(pos2ini+im2posini,length,res),
-                      -beam(w2ini,lamda0,pos2ini+im2posini,length),color = "Blue")
-beam3up ,= plt.plot(np.arange(pos2ini+im2posini,length,res),
-                      beam(w2ini,lamda0,pos2ini+im2posini,length),color = "Blue")
+bbeam2up ,= plt.plot(np.arange(lensPositions[1],lensPositions[1]+im2posini,res),
+                       backbeam(m2ini,w1ini,lamda0,lensPositions[1],lensPositions[1]+im2posini),color = "Blue")
 
-bbeam2down ,= plt.plot(np.arange(pos2ini,pos2ini+im2posini,res),
-                       -backbeam(m2ini,w1ini,lamda0,pos2ini,pos2ini+im2posini),color = "Blue")
+# Beam before the third lens (not implemented yet)
+beam3down ,= plt.plot(np.arange(lensPositions[1]+im2posini,length,res),
+                      -beam(w2ini,lamda0,lensPositions[1]+im2posini,length),color = "Blue")
+beam3up ,= plt.plot(np.arange(lensPositions[1]+im2posini,length,res),
+                      beam(w2ini,lamda0,lensPositions[1]+im2posini,length),color = "Blue")
+                      
+im1 ,= plt.plot([lensPositions[0]+im1posini,lensPositions[0]+im1posini], [-w1ini,w1ini])
+im2 ,= plt.plot([lensPositions[1]+im2posini,lensPositions[1]+im2posini], [-w2ini,w2ini])
 
-bbeam2up ,= plt.plot(np.arange(pos2ini,pos2ini+im2posini,res),
-                       backbeam(m2ini,w1ini,lamda0,pos2ini,pos2ini+im2posini),color = "Blue")
-
-im1 ,= plt.plot([pos1ini+im1posini,pos1ini+im1posini], [-w1ini,w1ini])
-im2 ,= plt.plot([pos2ini+im2posini,pos2ini+im2posini], [-w2ini,w2ini])
-
-lens1 ,= plt.plot([pos1ini,pos1ini],[-2,2])
-lens2 ,= plt.plot([pos2ini,pos2ini],[-2,2])
+lens1 ,= plt.plot([lensPositions[0],lensPositions[0]],[-2,2])
+lens2 ,= plt.plot([lensPositions[1],lensPositions[1]],[-2,2])
 
 plt.axis([0, length, -2, 2])
 
@@ -101,8 +109,8 @@ slamda = Slider(axlamda, 'wavelent', 200, 1200, valinit=782)
 axpos1  = plt.axes([0.25, 0.25, 0.65, 0.03], axisbg=axcolor)
 axpos2 = plt.axes([0.25, 0.15, 0.65, 0.03], axisbg=axcolor)
 
-spos1 = Slider(axpos1, 'position1', 0.0, length, valinit=pos1ini)
-spos2 = Slider(axpos2, 'position2', 0.0, length, valinit=pos2ini)
+spos1 = Slider(axpos1, 'position1', 0.0, length, valinit=lensPositions[0])
+spos2 = Slider(axpos2, 'position2', 0.0, length, valinit=lensPositions[1])
 
 # Define initial beam wasit slider
 axw0 = plt.axes([0.25, 0.3, 0.65, 0.03], axisbg=axcolor)
